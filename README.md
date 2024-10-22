@@ -15,7 +15,7 @@ One Connector to Rule them All
 
   **MuleSoft IDP Universal 🌐 REST Smart Connector 🔌**
 
-  When [Integrating IDP with Anypoint Studio](https://docs.mulesoft.com/idp/integrating-idp-with-anypoint-studio), it's important to consider a few potential challenges, which the MuleSoft IDP Universal 🌐 REST Connector 🔌 is designed to mitigate:
+  When [Integrating IDP with Anypoint Studio](https://docs.mulesoft.com/idp/integrating-idp-with-anypoint-studio), it's important to consider a few potential challenges, which the MuleSoft IDP Universal 🌐 REST Smart Connector 🔌 is designed to mitigate:
 
   *📍 Connector Sprawl:*
 
