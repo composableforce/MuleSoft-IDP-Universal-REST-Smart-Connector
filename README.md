@@ -1,4 +1,4 @@
-# MuleSoft-IDP-Universal-REST-Smart-Connector-
+# MuleSoft IDP Universal 🌐 REST Smart Connector 🔌
 One Connector to Rule them All
 
   mediaType: application/json
