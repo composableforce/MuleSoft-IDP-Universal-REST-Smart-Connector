@@ -105,7 +105,7 @@ Now you should have for your pleasure and audiences:
 **Step8** - Your configuration properties file will require:
 
 ```
-anypoint.idp.host=idp-rt.us-east-1.anypoint.mulesoft.com![Uploading canvas-icon@2x.png…]()
+anypoint.idp.host=idp-rt.us-east-1.anypoint.mulesoft.com
 
 anypoint.idp.basePath=/api/v1
 anypoint.idp.port=443
@@ -117,8 +117,6 @@ anypoint.idp.clientId=9xxxxxxxxxxxxxxxxxxx4
 anypoint.idp.clientSecret=9xxxxxxxxxxxxxxxE
 anypoint.idp.accessTokenUrl=https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token
 anypoint.orgId=3a9b4984-4b75-4c42-8d1b-434f8a5da342
-anypoint.idp.callbackURL=https://eoz5chj9g7d68t4.m.pipedream.net
-anypoint.idp.callbackURL.apikey=354345345345
 anypoint.idp.actionId=9026458a-868d-40b6-90e0-6e80639e0aea
 anypoint.idp.actionVersion=1.3.0
 anypoint.idp.filenameAndExtension=IDP-PO-CD656092-BurlingtonTextiles.pdf
