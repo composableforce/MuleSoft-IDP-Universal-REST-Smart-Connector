@@ -91,6 +91,11 @@ Add the dependency Rest Connect Library V1.0.2 if not avlaible like in EMEA (bee
 - Apple Mac: To see hidden folder structure beyond and including **.mule** press shift cmd period
 - Apple Mac: Find /Users/gjeffcock/AnypointStudio/studio-workspace/718/composableforce/**.mule**/plugins-tmp/repository/7.18.1/eca25329-9592-4ff1-9054-1b08d103b991/mule-plugin-mulesoft-idp-universal-rest-connector/1.0.0
 <img width="662" alt="image" src="https://github.com/user-attachments/assets/320461e8-13c9-43fb-ae46-45ea7d1b1d4c">
+![canvas-icon](https://github.com/user-attachments/assets/cd09b839-d48e-444a-9552-9968ba019f0f)
+<img width="64" alt="canvas-icon@2x" src="https://github.com/user-attachments/assets/8250874a-64ca-4b5b-b344-898be6236962">
+<img width="8" alt="palette-icon" src="https://github.com/user-attachments/assets/bd76eafd-9c86-4dd3-95f6-511ae29e31d2">
+<img width="16" alt="palette-icon@2x" src="https://github.com/user-attachments/assets/d05bd6a8-4203-4187-b7c5-b0737f708021">
+
 
 Now you should have for your pleasure and audiences:
 ![image](https://github.com/user-attachments/assets/4c95bafa-0bd5-44dc-b0e9-0461201829ff)
