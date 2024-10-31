@@ -94,7 +94,9 @@ Add the dependency Rest Connect Library V1.0.2 if not avlaible like in EMEA (bee
 
 ![canvas-icon](https://github.com/user-attachments/assets/8d31357d-60c1-41c3-b973-fc25ee05882f)
 
-
+<img width="64" alt="canvas-icon@2x" src="https://github.com/user-attachments/assets/cb1ea242-96db-42a2-93b3-75a4aad8daa0">
+<img width="8" alt="palette-icon" src="https://github.com/user-attachments/assets/8c5d2849-c2dd-429d-a7d4-520697dfdfdc">
+<img width="16" alt="palette-icon@2x" src="https://github.com/user-attachments/assets/287b9285-29a6-4ceb-b67f-ee894526b0b8">
 
 Now you should have for your pleasure and audiences:
 ![image](https://github.com/user-attachments/assets/4c95bafa-0bd5-44dc-b0e9-0461201829ff)
@@ -103,7 +105,8 @@ Now you should have for your pleasure and audiences:
 **Step8** - Your configuration properties file will require:
 
 ```
-anypoint.idp.host=idp-rt.us-east-1.anypoint.mulesoft.com
+anypoint.idp.host=idp-rt.us-east-1.anypoint.mulesoft.com![Uploading canvas-icon@2x.png…]()
+
 anypoint.idp.basePath=/api/v1
 anypoint.idp.port=443
 anypoint.idp.protocol=HTTPS
