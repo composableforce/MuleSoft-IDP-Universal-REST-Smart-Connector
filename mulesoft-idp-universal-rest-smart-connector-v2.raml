@@ -1,0 +1,1069 @@
+#%RAML 1.0
+title: MuleSoft IDP Universal 🌐 REST Smart Connector 🔌
+version: 2.0.0
+mediaType: application/json
+protocols: [HTTPS]
+
+baseUri: https://{host}
+
+baseUriParameters:
+  host:
+    description: |
+      Currently supported IDP Runtime Regions
+      - idp-rt.us-east-1.anypoint.mulesoft.com
+      - idp-rt.eu-central-1.eu1.anypoint.mulesoft.com
+      Currently supported Anypoint Runtime Regions
+      - anypoint.mulesoft.com
+      - eu1.anypoint.mulesoft.com
+    enum: ["idp-rt.eu-central-1.eu1.anypoint.mulesoft.com", "idp-rt.us-east-1.anypoint.mulesoft.com", "anypoint.mulesoft.com", "eu1.anypoint.mulesoft.com"]
+    type: string
+
+traits:
+  rateLimited:
+    responses:
+      429:
+        description: |
+          The client reached the maximum number of requests per minute per IP.
+          The client should retry the request later.
+
+/api/{apiVersion}/organizations/{orgId}:
+  displayName: MuleSoft 🌐 IDP Resources
+  description: |
+    MuleSoft IDP Endpoints:
+      - idp-rt.us-east-1.anypoint.mulesoft.com
+      - idp-rt.eu-central-1.eu1.anypoint.mulesoft.com
+    https://idp-rt.us-east-1.anypoint.mulesoft.com/api/v1/organizations/3a9b4984-4b75-4c42-8d1b-434f8a5da342/actions/9026458a-868d-40b6-90e0-6e80639e0aea/versions/1.1.0/executions
+  uriParameters:
+    apiVersion:
+      type: field-apiVersion
+      required: true
+    orgId:
+      type: field-orgId
+      required: true
+
+  /reviews:
+    securedBy: mulesoft-basic-login
+    get:
+      displayName: 🌐 IDP - ReviewTask - List
+      description: |
+        Get a list of all executions requiring manual review, across actions, that the requesting user has permission to review
+      queryParameters:
+        page:
+          type: number
+          description: Zero Based
+          default: 0
+          required: false
+        size:
+          type: number
+          default: 20
+          required: false
+        sort:
+          type: string
+          enum:
+            - updatedAt,desc
+            - updatedAt,asc
+            - name,desc
+            - name,asc
+            - type,desc
+            - type,asc
+          default: updatedAt,desc
+          required: false
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              type: array
+              items: object-ReviewItem
+        500:
+          description: Internal Server Error
+          body:
+            application/problem+json: object-commonError
+
+  /actions/{actionId}/versions/{actionVersion}/executions:
+      securedBy: mulesoft-connectedApp-oauth
+      uriParameters:
+        actionId:
+          type: field-actionId
+        actionVersion:
+          type: field-actionVersion
+      post:
+        displayName: 🌐 IDP - Task - Submit
+        description: postDocumentActionExecution - Submits a file for IDP processing
+        body:
+          multipart/form-data:
+            type: any
+            description: |
+
+              ## Dataweave Example
+              ```
+
+                %dw 2.0
+                output java
+                ---
+                {
+                  parts: {
+                    callback : {
+                      headers: {
+                        "Content-Type": "text/plain"
+                      },
+                        content : '{"noAuthUrl": "https://enny4ln4hb1v.x.pipedream.net/"}' // Note SINGLE quotes
+                      },
+                    file: {
+                      headers: {
+                        "Content-Disposition": {
+                          name: "file",
+                          filename: "IDP-PO-CD656092-BurlingtonTextiles.pdf",
+                          subtype: "form-data"
+                        },
+                        "Content-Type": "application/octet-stream"
+                      },
+                      content: readUrl("classpath://IDP-PO-CD656092-BurlingtonTextiles.pdf", "application/octet-stream").
+                    }
+                  }
+                }
+              ```
+
+              
+              ## OR Dataweave Example
+              ```
+
+                %dw 2.0
+                output java
+                import * from dw::core::Binaries
+                ---
+                {
+                  parts: {
+                    callback : {
+                      headers: {
+                        "Content-Type": "text/plain"
+                      },
+                        content : '{"noAuthUrl": "https://enny4ln4hb1v.x.pipedream.net/"}'
+                      },
+                    file: {
+                      headers: {
+                        "Content-Disposition": {
+                          name: "file",
+                          filename: "IDP-PO-CD656092-BurlingtonTextiles.pdf",
+                          subtype: "form-data"
+                        },
+                        "Content-Type": "application/octet-stream"    
+                      },
+                      content: fromBase64("JVBERi0xLjcNCiW...deleted for brevity.....0YNCg==")
+                    }
+                  }
+                }
+              ```
+
+
+              ## Would BOTH produce the following Multipart Example
+              ```
+                ------WebKitFormBoundary2Iqii0OMIdEA33iA
+                Content-Disposition: form-data; name="callback"
+                Content-Type: text/plain
+
+                {"noAuthUrl": "https://enny4ln4hb1v.x.pipedream.net/"}
+                ------WebKitFormBoundary2Iqii0OMIdEA33iA
+                Content-Disposition: form-data; name="file"; filename="IDP-PO-CD656092-BurlingtonTextiles.pdf"
+                Content-Type: application/pdf
+
+                %PDF-1.7
+                …… DELETED for BREVITY……
+                %����
+                1 0 obj
+                <</Pages 2 0 R /Type/Catalog>>
+                %%EOF
+
+                ------WebKitFormBoundary2Iqii0OMIdEA33iA--
+
+              ```
+          application/json: object-DocumentExecutionPostRequestBase64
+        responses:
+          201:
+            description: Created
+            body:
+              application/json: object-DocumentExecutionPostResponse
+          400:
+            description: Bad Request
+            body:
+              application/problem+json:
+                type: object-commonError
+          406:
+            description: Not Acceptable
+            body:
+              application/problem+json:
+                type: object-commonError
+          500:
+            description: Internal Server Error
+            body:
+              application/problem+json:
+                type: object-commonError
+
+  /actions/{actionId}/versions/{actionVersion}/executions/{executionId}:
+        securedBy: mulesoft-connectedApp-oauth
+        uriParameters:
+          actionId:
+            type: field-actionId
+          actionVersion:
+            type: field-actionVersion
+          executionId:
+            type: field-executionId
+        get:
+          displayName: 🌐 IDP - Task - GetResult
+          description: getDocumentActionExecution - Retrieves the State & Result Data of a document action execution.
+          queryParameters:
+            valueOnly:
+              description: Only keep the extracted value of the given field, remove confidenceScore and geometry from the response body
+              required: false
+              default: true
+              type: boolean
+
+          responses:
+            200:
+              description: Success
+              body:
+                application/json: object-DocumentExecutionGetResponse
+            404:
+              description: Not Found
+              body:
+                application/problem+json:
+                  type: object-commonError
+            406:
+              description: Not Acceptable
+              body:
+                application/problem+json:
+                  type: object-commonError
+            429:
+              description: Too Many Requests
+              body:
+                application/problem+json:
+                  type: object-commonError
+
+  /actions/{actionId}/reviews/{executionId}:
+      securedBy: mulesoft-basic-login
+      uriParameters:
+        actionId:
+          type: field-actionId
+        executionId:
+          type: field-executionId
+      get:
+        displayName: 🌐 IDP - ReviewTaskByExecution - Fetch
+        description: Get a list of low-confidence fields by Execution Id
+        responses:
+          200:
+            body:
+              application/json:
+                type: object-reviewTask
+          404:
+            body:
+              application/json:
+                type: object-commonError
+          500:
+            body:
+              application/json:
+                type: object-commonError
+                
+      patch:
+        displayName: 🌐 IDP - ReviewTaskByExecution - Update
+        description: Patch a list of low-confidence fields by Execution Id
+        body:
+          application/json:
+            type: object-reviewTask
+        responses:
+          200:
+            body:
+              application/json:
+                type: object-reviewTask
+          400:
+            body:
+              application/json:
+                type: object-commonError
+          404:
+            body:
+              application/json:
+                type: object-commonError
+          500:
+            body:
+              application/json:
+                type: object-commonError
+
+      delete:
+        displayName: 🌐 IDP - ReviewTaskByExecution - Delete
+        description: Delete a review task (Execution Status is updated as SUCCEEDED without changing the execution result)
+        responses:
+          200:
+            description: Success
+          400:
+            body:
+              application/json:
+                type: object-commonError
+          404:
+            body:
+              application/json:
+                type: object-commonError
+          500:
+            body:
+              application/json:
+                type: object-commonError
+
+
+
+
+/idp/api/{apiVersion}/organizations/{orgId}:
+  displayName: MuleSoft Anypoint ⚙️ Platform Resources for IDP
+  description: |
+    MuleSoft Anypoint ⚙️ Platform Resources for IDP Endpoints
+    https://anypoint.mulesoft.com/idp/api/v1/organizations/eca25329-9592-4ff1-9054-1b08d103b991
+  uriParameters:
+    apiVersion:
+      type: field-apiVersion
+      required: true
+    orgId:
+      type: field-orgId
+      required: true
+
+  /actions:
+    securedBy: mulesoft-basic-login
+    get:
+      displayName: ⚙️ Platform - Get IDP Actions List
+      description: |
+        MuleSoft Anypoint Platform - Get IDP Actions List
+        https://anypoint.mulesoft.com/idp/api/v1/organizations/eca25329-9592-4ff1-9054-1b08d103b991/actions?page=0&size=5&sort=type,desc
+      queryParameters:
+        page:
+          type: number
+          description: Zero Based
+          default: 0
+          required: false
+        size:
+          type: number
+          default: 20
+          required: false
+        sort:
+          type: string
+          enum:
+            - updatedAt,desc
+            - updatedAt,asc
+            - name,desc
+            - name,asc
+            - type,desc
+            - type,asc
+          default: updatedAt,desc
+          required: false
+      responses:
+        200:
+          body:
+            type: object-actionsList
+
+  /actions/{actionId}:
+    securedBy: mulesoft-basic-login
+    uriParameters:
+      actionId:
+        type: field-actionId
+        required: true
+    get:
+      displayName: ⚙️ Platform - Get IDP Action Detail
+      description: |
+        Get high level detail and hardcoded to version 1.0.0 detail
+        https://anypoint.mulesoft.com/idp/api/v1/organizations/eca25329-9592-4ff1-9054-1b08d103b991/actions/90c3e286-72b5-42ca-92d0-22f86ea8d766
+      responses:
+        200:
+          body:
+            type: object-action
+
+  /actions/{actionId}/versions:
+    securedBy: mulesoft-basic-login
+    uriParameters:
+      actionId:
+        type: field-actionId
+        required: true
+    get:
+      displayName: ⚙️ Platform - Get IDP Action's Versions List
+      description: |
+        List versions of an Action
+        https://anypoint.mulesoft.com/idp/api/v1/organizations/eca25329-9592-4ff1-9054-1b08d103b991/actions/90c3e286-72b5-42ca-92d0-22f86ea8d766/versions?page=0&size=10&sort=version,desc
+      queryParameters:
+              page:
+                type: number
+                description: Zero Based
+                default: 0
+                required: false
+              size:
+                type: number
+                default: 20
+                required: false
+              sort:
+                type: string
+#                enum:
+#                  - version,desc        Breaks REST Connector in Mule Project  - Reserved word maybe..
+#                  - version,asc
+#                default: version,desc
+                required: false
+      responses:
+              "200":
+                body:
+                  type: object-actionVersion []
+
+  /actions/{actionId}/reviewers:
+    securedBy: mulesoft-basic-login
+    uriParameters:
+      actionId:
+        type: field-actionId
+        required: true
+    get:
+      displayName: ⚙️ Platform - Get IDP Action's Reviewers List
+      description: |
+        List the reviewers of a particular action
+        https://anypoint.mulesoft.com/idp/api/v1/organizations/eca25329-9592-4ff1-9054-1b08d103b991/actions/90c3e286-72b5-42ca-92d0-22f86ea8d766/reviewers
+      responses:
+        200:
+          body:
+            items:
+              properties:
+                      id:
+                        example: 4d4fda9b-b772-4085-ac61-078af3b54543
+                        type: field-uuid
+                      name:
+                        example: Composable Force
+                        type: string
+                      username:
+                        example: george@composableforce.com
+                        type: string
+                      "type":
+                        example: USER
+                        type: string
+                      email:
+                        example: george@composableforce.com
+                        type: string
+
+
+
+types: # Considered use of Library, but the dependency was deemed to hinder adoption
+
+  field-apiVersion:
+    displayName: API Version
+    description:
+    type: string
+    enum:
+      - v1
+    example: v1
+    default: v1
+
+  field-orgId:
+    displayName: MuleSoft Anypoint Organization Id
+    description: |
+      Your Anypoint Organisation Id see: [Find your Organization ID.](https://docs.mulesoft.com/access-management/organization#find-your-organization-id)
+    example: eca25329-9592-4ff1-9054-1b08d103b991
+    pattern: ^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$
+    
+  field-actionId:
+    displayName: IDP Document Action Id
+    description: Published Document Action UUID
+    example: 90c3e286-72b5-42ca-92d0-22f86ea8d766
+    type: string
+    pattern: ^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$
+
+  field-actionVersion:
+    displayName: IDP Document Action Id Version
+    description: Document Action Version like 1.0.0
+    example: 1.1.0
+    type: string
+
+  field-executionId:
+    displayName: IDP Execution Id
+    description: IDP Execution Id returned after successful submission
+    example: 022c61de-9bfc-4a94-8a9c-43c5f8ac153e
+    type: string
+    pattern: ^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$
+
+  field-ExecutionStatus:
+    displayName: IDP Execution Status
+    description: |
+      ## [Execution Results Reference](https://docs.mulesoft.com/idp/automate-document-processing-with-the-idp-api#execution-status-reference).
+
+      When you query the results of an execution, the IDP API returns the status which can be any of the following:
+
+      - `ACKNOWLEDGED`: The document action execution request was received.
+      - `IN_PROGRESS`: The execution started.
+      - `RESULTS_PENDING`: The execution finished and IDP is processing the results.
+      - `MANUAL_VALIDATION_REQUIRED`: The execution finished but the results need manual validation.
+      - `FAILED`: The execution request finished unsuccessfully.
+      - `PARTIAL_SUCCESS`: The execution request finished but some sub-tasks failed.
+      - `SUCCEEDED`: The execution request finished successfully.
+    default: IN_PROGRESS
+    enum:
+      - ACKNOWLEDGED
+      - IN_PROGRESS
+      - RESULTS_PENDING
+      - MANUAL_VALIDATION_REQUIRED
+      - FAILED
+      - PARTIAL_SUCCESS
+      - SUCCEEDED
+    example: IN_PROGRESS
+    type: string
+
+  field-uuid:
+    type: string
+    pattern: ^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$
+
+  object-action:
+    type: object
+    properties:
+      id:
+        type: field-actionId
+        required: true
+      organizationId:
+        type: field-orgId
+        required: true
+      name:
+        type: string
+        example: IDP-PO-CD656092-BurlingtonTextiles
+        required: true
+      description:
+        type: string
+        example: CD656092-BurlingtonTextiles Purchase Order
+        required: false
+      "type":
+        type: string
+        enum:
+          - GENERIC
+          - INVOICE
+          - PURCHASE_ORDER
+        example: GENERIC
+        required: true
+      empowerWith:
+        type: string
+        required: false
+        enum:
+          - NLP
+      configuration:
+        type: object-actionConfiguration
+      createdBy:
+        type: field-uuid
+        example: 4d4fda9b-b772-4085-ac61-078af3b54543
+        required: true
+      createdAt:
+        type: datetime
+        example: '2024-06-24T16:56:37.372612Z'
+        format: rfc3339
+        required: true
+      updatedAt:
+        type: datetime
+        example: '2024-06-24T17:03:55.950227Z'
+        format: rfc3339
+        required: false
+      registration:
+        type: object
+        properties:
+          status:
+            type: string
+            enum:
+              - REGISTERED
+            example: REGISTERED
+            required: false
+          message:
+            type: string
+            example: ''
+            required: false
+
+  object-actionConfiguration:
+    type: object
+    properties:
+      content:
+        type: object
+        properties:
+          output:
+            type: object
+            properties:
+              fields:
+                type: object
+              tables:
+                type: object
+              prompts::
+                type: Prompts
+      version:
+        type: field-actionVersion
+
+  Prompts:
+    type: object
+    properties:
+      /^[a-zA-Z0-9_.-]*$/:
+        type: Prompt
+  Prompt:
+    type: object
+    properties:
+      hidden:
+        type: boolean
+        example: false
+      prompt:
+        type: string
+        example: what is the text
+      source:
+        type: string
+        enum:
+         - llm
+         - document
+        example: document
+      required:
+        type: boolean
+        example: true
+      confidenceThreshold:
+        type: integer
+        example: 10
+
+  object-actionOperation:
+    type: object
+    properties:
+      id:
+        type: field-uuid
+      "type":
+        type: string
+        enum:
+          - EXCHANGE_PUBLICATION
+          - RUNTIME_PUBLICATION
+        example: EXCHANGE_PUBLICATION
+      status:
+        type: string
+        example: SUCCESS
+      result:
+        type: string
+      info:
+        type: object
+        properties:
+          baseUrl:
+            type: string
+            example: "https://idp-rt.us-east-1.anypoint.mulesoft.com"
+            required: false
+      createdAt:
+        type: datetime
+        example: '2024-06-24T16:56:37.372612Z'
+        format: rfc3339
+        required: true
+      updatedAt:
+        type: datetime
+        example: '2024-06-24T17:03:55.950227Z'
+        format: rfc3339
+        required: false
+
+  object-actionsList:
+    type: object
+    properties:
+      actions:
+        type: object-action []
+      total:
+        description: Total Org's Actions (not zero based)
+        type: integer
+        example: 6
+        required: true
+
+  object-actionVersion:
+    type: object
+    properties:
+      organizationId:
+        type: field-orgId
+        required: true
+      actionId:
+        type: field-actionId
+        required: true
+      version:
+        type: field-actionVersion
+        required: true
+      status:
+        type: string
+        example: SUCCESS
+        required: false
+      configuration:
+        type: object-actionConfiguration
+      operations:
+        type: object-actionOperation []
+      createdAt:
+        type: datetime
+        example: '2024-06-24T16:56:37.372612Z'
+        format: rfc3339
+        required: true
+      updatedAt:
+        type: datetime
+        example: '2024-06-24T17:03:55.950227Z'
+        format: rfc3339
+        required: false
+
+  object-DocumentExecutionPostResponse:
+    displayName: IDP Document Submission Response Object
+    description: 
+    type: object
+    properties:
+      id:
+        type: field-executionId
+        required: true
+      documentName:
+        description: Document Name and Extension
+        type: string
+        example: IDP-PO-CD656092-BurlingtonTextiles.pdf
+        required: true
+      status:
+        type: field-ExecutionStatus
+        required: false
+    additionalProperties: false
+    example: {"id": "af78b8b2-3867-4073-aac6-d24e01f48ae2","documentName": "IDP-PO-CD656092-BurlingtonTextiles.pdf"}
+
+  object-DocumentExecutionGetResponse:
+    displayName: IDP Retrieve Execution Response Object
+    type: object
+    description:
+    properties:
+      pages:
+        required: false
+        type: array
+        items: object-Document-Page
+      id:
+        type: field-executionId
+        required: false
+      documentName:
+        type: string
+        required: false
+      prompts:
+        type: object-Document-Prompt
+        required: false
+      status:
+        type: field-ExecutionStatus
+        required: false
+
+  object-Document-Page:
+    displayName: IDP Retrieve Execution Response Page Object
+    type: object
+    properties:
+      tables?:
+        type: object
+        properties: {}
+      page?:
+        type: string
+      fields?:
+        type: object
+        properties: {}
+      prompts?:
+        type: object-Document-Prompt
+
+  object-Document-Prompt:
+    displayName: IDP Retrieve Execution Response Prompt Object
+    type: object
+    properties:
+      answer?: object-Document-Field
+      source?:
+        type: string
+      prompt?:
+        type: string
+
+  object-Document-Field:
+    displayName: IDP Retrieve Execution Response Field Object
+    type: object
+    properties:
+      value?:
+        type: string
+      geometry?:
+        type: object
+        properties:
+          height:
+            type: number
+            required: false
+          left:
+            type: number
+            required: false
+          width:
+            type: number
+            required: false
+          top:
+            type: number
+            required: false
+      confidenceScore?:
+        type: number
+
+  object-reviewTask:
+    displayName: IDP Review Task
+    description: IDP Review Task
+    properties:
+        results: 
+          type: array
+        queriesResults: 
+          items:
+            type:
+              properties:
+                id: string
+                name: string
+                query: string
+                result: nil
+                confidenceScore: nil
+                page: number
+                geometry: nil
+        analyzersResults: 
+          type: array
+        signaturesResults: 
+          type: array
+
+  object-commonError:
+    displayName: 🆘 IDP Common Error Response
+    description: IDP Common Error Response
+    properties:
+      status:
+        description: Number indicating the HTTP status code generated by the origin server for this occurrence of the problem
+        default: 404
+        example: 404
+        type: number
+        format: int32
+        required: false
+      title:
+        description: Short, human-readable summary of the problem type
+        example: Not Found
+        type: string
+        required: false
+      detail:
+        description: Human-readable explanation specific to this occurrence of the problem
+        example: "Action Id: 90c3e286-72b5-42ca-92d0-22f86ea8d766, Version: 1.1.0, Execution Id: 022c61de-9bfc-4a94-8a9c-43c5f8ac1531"
+        type: string
+        required: false
+      type:
+        description: URI reference that identifies the problem type
+        required: false
+        type: string
+    example: {"status": 404,"title": "Not Found"}
+    additionalProperties: false
+
+
+
+
+
+
+
+  object-DocumentExecutionPostRequestBase64:
+    description: Request object for executing an action with a Base64-encoded file
+    type: object
+    properties:
+      callback:
+        description: Callback Url
+        required: false
+        example:
+          strict: false
+          value: "{\"noAuthUrl\":\"callbackURL\"}"
+        type: string
+      file:
+        description: File content in base64 string format
+        required: true
+        example:
+          strict: false
+          value: JVBERi0xLjMKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL1Jlc291cm5lcyAyIDAgUgovQ29udGVudHMgNCAwIFI+PgplbmRvYmoKNCAwIG9iago8PC9GaWx0ZXIgL0ZsYXRlRGVjb2RlIC9MZW5ndGggNzE+PgpzdHJlYW0KeJwzUvDiMtAzNVco53IKUdB3M1Sw0DMwUAhJU3ANAYkYG+oZWihYGJjoGZgphKQoaBQn5qQWp+UXJadqKoRkgVQBAO5BEAMKZW5kc3RyZWFtCmVuZG9iagoxIDAgb2JqCjw8L1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUiBdCi9Db3VudCAxCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCj4+CmVuZG9iago1IDAgb2JqCjw8L1R5cGUgL0ZvbnQKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL1N1YnR5cGUgL1R5cGUxCi9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQovRm9udCA8PAovRjEgNSAwIFIKPj4KL1hPYmplY3QgPDwKPj4KPj4KZW5kb2JqCjYgMCBvYmoKPDwKL1Byb2R1Y2VyIChQeUZQREYgMS43LjIgaHR0cDovL3B5ZnBkZi5nb29nbGVjb2RlLmNvbS8pCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNTAxMDgwNDU4MzgpCj4+CmVuZG9iago3IDAgb2JqCjw8Ci9UeXBlIC9DYXRhbG9nCi9QYWdlcyAxIDAgUgovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgo+PgplbmRvYmoKeHJlZgowIDgKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMjI3IDAwMDAwIG4gCjAwMDAwMDA0MTAgMDAwMDAgbiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDg3IDAwMDAwIG4gCjAwMDAwMDAzMTQgMDAwMDAgbiAKMDAwMDAwMDUxNCAwMDAwMCBuIAowMDAwMDAwNjIzIDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOAovUm9vdCA3IDAgUgovSW5mbyA2IDAgUgo+PgpzdGFydHhyZWYKNzI2CiUlRU9GCg==
+        type: string
+      fileName:
+        required: false
+        description: File name provided by user
+        example:
+          strict: false
+          value: testFile.pdf
+        type: string
+  object-FilteredLlmAnalyzerLowConfidenceResult:
+    description: Analyzers that need review
+    type: object
+    properties:
+      confidenceScore:
+        type: number
+        format: float
+        required: true
+      id:
+        type: string
+        required: true
+      isValidated?:
+        type: boolean
+      name:
+        type: string
+        required: true
+      query:
+        type: string
+        required: true
+      result:
+        type: string
+        required: true
+  object-ReviewItem:
+    description: Review Item Response
+    type: object
+    properties:
+      docActionId:
+        description: Document Action Id
+        required: false
+        type: string
+      docFileId:
+        description: Document File Id
+        required: false
+        type: string
+      docFileName:
+        description: Document FileName
+        required: false
+        type: string
+      docOperationCreationDate:
+        description: Document Operation Creation Date
+        required: false
+        type: datetime
+      docOperationId:
+        description: Document Operation Id
+        required: false
+        type: string
+  object-DocumentActionLowConfidenceExecution:
+    description: Low Confidence Items/Queries/Analyzers/Signatures
+    type: object
+    example:
+      strict: false
+      value:
+        results: []
+        queriesResults: []
+        analyzersResults: []
+        signaturesResults: []
+    properties:
+      analyzersResults:
+        description: Analyzers that need review
+        default: []
+        type: array
+        items: object-FilteredLlmAnalyzerLowConfidenceResult
+        required: true
+      queriesResults: object-Json
+      results: object-Json
+      signaturesResults: object-Json
+
+  object-JsonNode:
+    type: object
+  object-Json:
+    description: Signatures with Low Confidence Scores
+    type: object
+  object-Pageable:
+    type: object
+    properties:
+      page:
+        type: number
+        minimum: 0
+        format: int32
+        required: false
+      size:
+        type: number
+        minimum: 1
+        format: int32
+        required: false
+      sort:
+        type: string
+        enum:
+          - updatedAt,desc
+          - updatedAt,asc
+          - name,desc
+          - name,asc
+          - type,desc
+          - type,asc
+        default: updatedAt,desc
+        required: false
+
+
+
+securitySchemes:
+  mulesoft-connectedApp-oauth:
+    displayName: 🛡️ MuleSoft Connected App OAuth 2.0
+    type: OAuth 2.0
+    description: |
+
+        ### [Configure Connected Apps](https://docs.mulesoft.com/idp/automate-document-processing-with-the-idp-api#create-a-connected-app)
+
+        ```
+          curl --location --request POST 'https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token' \ 
+          --header 'Content-Type: application/json' \
+          --data-raw '{
+            "grant_type": "client_credentials",
+            "client_id": "<connected-app-client-id>", 
+            "client_secret": "<connected-app-client-secret>" 
+          }'
+        ```
+    settings:
+      accessTokenUri: https://{mulesoftAnypointRegion}/accounts/api/v2/oauth2/token
+      authorizationGrants: 
+        - client_credentials
+    describedBy:
+      headers:
+        Authorization:
+          description: |
+            Used to send a valid OAuth 2 access token. Bearer 234235246236236326
+          type: string
+          example: Bearer 0695bab3-e776-4d33-b61d-092789cb8765
+          pattern: ^Bearer [{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$
+      responses:
+        401:
+          description: |
+            Bad or expired token. This can happen if the API consumer uses a revoked or expired access token. To fix you should re-authenticate the user.
+          body:
+            application/problem+json:
+              type: object-commonError
+        403:
+          description: |
+            Bad OAuth request (wrong consumer key, bad nonce, expired timestamp...). Unfortunately, re-authenticating the user won't help here.
+          body:
+            application/problem+json:
+              type: object-commonError
+  mulesoft-basic-login:
+    type: Basic Authentication
+    displayName: 🛡️ MuleSoft Anypoint Login 
+    describedBy:
+      responses:
+        "200":
+          body:
+            application/json:
+              properties:
+                access_token:
+                  example: d127e2ec-a703-4e2a-8629-e9100000000ble
+                  type: string
+                token_type:
+                  example: bearer
+                  type: string
+description: |
+
+  mediaType: application/json
+
+  protocols: HTTPS
+
+  securedBy: 🛡️ MuleSoft Connected App OAuth 2.0
+
+  | Author | Date | Description
+  | -------- | ------- | ------- |
+  | G.Jeffcock | 23rd June 2024 | Launched| 
+  | G.Jeffcock | 12th Feb 2025 | merged Platform API| 
+  |||| 
+  ||||
+
+  **MuleSoft IDP Universal 🌐 REST Smart Connector 🔌**
+
+  When [Integrating IDP with Anypoint Studio](https://docs.mulesoft.com/idp/integrating-idp-with-anypoint-studio), it's important to consider a few potential challenges, which the MuleSoft IDP Universal 🌐 REST Smart Connector 🔌 is designed to mitigate:
+
+  *📍 Connector Sprawl:*
+
+  **Challenge**: Every published action creates a new connector, leading to an overwhelming number of connectors.
+
+  **Solution**: The Universal REST Connector consolidates these actions, significantly reducing the number of connectors required.
+
+  *📍 Reconfiguration Overload:*
+
+  **Challenge**: Each document action version generates a different connector, necessitating frequent reconfigurations in Anypoint projects.
+
+  **Solution**: By using a single connector, you minimize the need for constant reconfiguration, streamlining project management.
+
+  *📍 Support for Undocumented Functionality:*
+
+  **Challenge**: Integrations often need to support functionalities that aren't well-documented.
+
+  **Solution**: The Universal REST Connector is designed to handle undocumented functionalities, providing more robust and flexible integration capabilities.
+
+  *📍 Rapid Onboarding for Enterprise Scale:*
+
+  **Challenge**: Creating a universal solution that processes and calls at an enterprise scale requires the ability to quickly onboard new document actions.
+
+  **Solution**: This connector allows for the rapid onboarding of new document actions, enabling your enterprise to scale efficiently and effectively.
+
+
+documentation:
+ - title: 📌 Why?
+   content: |
+     ### MuleSoft IDP Universal 🌐 REST Smart Connector 🔌
+
+
+ - title: 📌 How?
+   content: |
+     ### MuleSoft IDP Universal 🌐 REST Smart Connector 🔌
