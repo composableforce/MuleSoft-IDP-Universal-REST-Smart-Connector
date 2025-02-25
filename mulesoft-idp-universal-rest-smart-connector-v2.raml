@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: MuleSoft IDP Universal 🌐 REST Smart Connector 🔌
-version: 2.0.0
+version: 1.0.1
 mediaType: application/json
 protocols: [HTTPS]
 
@@ -403,6 +403,29 @@ traits:
               "200":
                 body:
                   type: object-actionVersion []
+
+
+  /actions/{actionId}/versions/{versionSemantic}:
+    securedBy: mulesoft-basic-login
+    uriParameters:
+      actionId:
+        type: field-actionId
+        required: true
+      versionSemantic:
+        type: field-actionVersion
+        required: true
+    get:
+      displayName: ⚙️ Platform - Get IDP Action Version Detail
+      description: |
+        Detail of an Action's particular version
+        https://anypoint.mulesoft.com/idp/api/v1/organizations/eca25329-9592-4ff1-9054-1b08d103b991/actions/90c3e286-72b5-42ca-92d0-22f86ea8d766/versions/1.2.0
+      responses:
+              "200":
+                body:
+                  type: object-actionVersion
+
+
+
 
   /actions/{actionId}/reviewers:
     securedBy: mulesoft-basic-login
@@ -1009,7 +1032,7 @@ securitySchemes:
             application/json:
               properties:
                 access_token:
-                  example: d127e2ec-a703-4e2a-8629-e9100000000ble
+                  example: d127e2ec-a703-4e2a-8629-e9158804748ble
                   type: string
                 token_type:
                   example: bearer
